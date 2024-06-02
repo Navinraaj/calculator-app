@@ -29,10 +29,8 @@ pipeline {
         stage('Sonar Analysis') {
             steps {
                 script {
-                    // Retrieve the scanner installation from Jenkins' global tool configuration
                     def scannerHome = tool name: 'sonarscanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-                    withSonarQubeEnv('SonarQube') {  // Use the name of your SonarQube server configuration in Jenkins
-                        // Execute the SonarQube scanner using the environment variables
+                    withSonarQubeEnv('SonarQube') {
                         bat """
                             "${scannerHome}\\bin\\sonar-scanner" ^
                             -Dsonar.projectKey=calculator-app ^
@@ -43,7 +41,7 @@ pipeline {
                             -Dsonar.tests=src ^
                             -Dsonar.test.inclusions=**/*.spec.js, **/*.test.js ^
                             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info ^
-                            -Dsonar.login=${SONAR_TOKEN}
+                            -Dsonar.login=${env.SONAR_TOKEN}
                         """
                     }
                 }
