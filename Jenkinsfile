@@ -1,37 +1,49 @@
 pipeline {
     agent any
 
+    environment {
+        // Define any environment variables here if necessary
+    }
+
     stages {
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
         stage('Build') {
             steps {
                 script {
-                    // Your build commands
-                    sh 'npm install'
-                    sh 'docker build -t myapp:latest .'
+                    // Use bat command for Windows batch script
+                    bat 'npm install'
+                    // Assume creating a Docker image if applicable - Adjust or remove as necessary
+                    bat 'docker build -t myapp:latest .'
                 }
             }
         }
         stage('Test') {
             steps {
                 script {
-                    // Run tests
-                    sh 'npm test'
+                    // Running tests - Customize with your actual test command
+                    bat 'npm test'
                 }
             }
         }
         stage('Code Quality Analysis') {
             steps {
                 script {
-                    // Example with SonarQube
-                    sh 'sonar-scanner'
+                    // Example: Running SonarQube scanner - Ensure sonar-scanner is configured for Windows
+                    // You may need to specify the path to the sonar-scanner.bat if not in PATH
+                    bat 'sonar-scanner.bat'
                 }
             }
         }
         stage('Deploy') {
             steps {
                 script {
-                    // Deploy to a staging environment
-                    sh 'docker-compose up -d'
+                    // Example deployment command - adjust to your deployment method
+                    // For example, using Docker Compose or copying files to a server
+                    bat 'docker-compose up -d'
                 }
             }
         }
