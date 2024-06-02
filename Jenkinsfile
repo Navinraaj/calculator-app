@@ -6,12 +6,22 @@ pipeline {
         SONAR_TOKEN = credentials('calculator-token')
     }
 
+    tools {
+        // Use the SonarQube Scanner tool installed in Jenkins
+        sonarScanner 'sonarscanner'
+    }
+
     stages {
-        stage('Sonar Analysis') {
+        stage('Checkout SCM') {
             steps {
-                    withSonarQubeEnv('SonarQube') {
-                    bat 'mvn clean package sonar:sonar'
-                    }
+                checkout scm
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    bat 'sonar-scanner -Dsonar.projectKey=calculator-jenkins -Dsonar.sources=src -Dsonar.host.url=http://172.31.112.1:9000 -Dsonar.login=%SONAR_TOKEN%'
+                }
             }
         }
         stage('Deploy') {
@@ -20,6 +30,12 @@ pipeline {
                     bat 'echo Deploying...'
                 }
             }
+        }
+    }
+    post {
+        always {
+            // Clean up workspace after build
+            cleanWs()
         }
     }
 }
