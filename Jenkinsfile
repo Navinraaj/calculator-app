@@ -10,9 +10,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    // Use bat command for Windows batch script
                     bat 'npm install'
-                    // Assume creating a Docker image if applicable - Adjust or remove as necessary
                     bat 'docker build -t myapp:latest .'
                 }
             }
@@ -20,26 +18,25 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // Running tests - Customize with your actual test command
                     bat 'npm test'
                 }
             }
         }
-        stage('Code Quality Analysis') {
+        stage('SonarQube Analysis') {
             steps {
                 script {
-                    // Example: Running SonarQube scanner - Ensure sonar-scanner is configured for Windows
-                    // You may need to specify the path to the sonar-scanner.bat if not in PATH
-                    bat 'sonar-scanner.bat'
+                    // Ensure environment variable correctly references the SonarQube server setup in Jenkins
+                    withSonarQubeEnv('My SonarQube Server') {
+                        // Use the SonarQube scanner with the proper token
+                        bat "sonar-scanner.bat -Dsonar.projectKey=calculator-app -Dsonar.sources=. -Dsonar.host.url=http://your-sonar-url -Dsonar.login=${env['calculator-token']}"
+                    }
                 }
             }
         }
         stage('Deploy') {
             steps {
                 script {
-                    // Example deployment command - adjust to your deployment method
-                    // For example, using Docker Compose or copying files to a server
-                    bat 'docker-compose up -d'
+                    bat 'echo Deploying...'
                 }
             }
         }
