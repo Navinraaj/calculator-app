@@ -2,7 +2,6 @@ pipeline {
     agent any
     environment {
         // Fetch the SonarQube token from Jenkins credentials
-        // Make sure the ID matches exactly what you have configured in Jenkins credentials
         SONAR_TOKEN = credentials('calculator-token')
     }
 
@@ -27,16 +26,25 @@ pipeline {
                 }
             }
         }
-        stage('SonarQube Analysis') {
+        stage('Sonar Analysis') {
             steps {
                 script {
-                    // Ensure the SonarQube environment variable correctly references the SonarQube server setup in Jenkins
-                    // The name 'SonarQube' here should exactly match the name given to the SonarQube server configuration in Jenkins
-                    withSonarQubeEnv('SonarQube') {
-                        // Execute the SonarQube scanner command using the environment variables
-                        // Use the SonarQube scanner installation configured in Jenkins. Make sure 'sonarscanner' is set up correctly under Jenkins Global Tool Configuration
-                        // Correct the project key and sources path as needed for your project setup
-                        bat 'sonar-scanner.bat -Dsonar.projectKey=calculator-app -Dsonar.sources=src/main/java -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}'
+                    // Retrieve the scanner installation from Jenkins' global tool configuration
+                    def scannerHome = tool name: 'sonarscanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+                    withSonarQubeEnv('SonarQube') {  // Use the name of your SonarQube server configuration in Jenkins
+                        // Execute the SonarQube scanner using the environment variables
+                        bat """
+                            "${scannerHome}\\bin\\sonar-scanner" ^
+                            -Dsonar.projectKey=calculator-app ^
+                            -Dsonar.projectName="Calculator App" ^
+                            -Dsonar.projectVersion=1.0 ^
+                            -Dsonar.sources=src ^
+                            -Dsonar.exclusions=**/node_modules/**,src/**/*.spec.js ^
+                            -Dsonar.tests=src ^
+                            -Dsonar.test.inclusions=**/*.spec.js, **/*.test.js ^
+                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info ^
+                            -Dsonar.login=${SONAR_TOKEN}
+                        """
                     }
                 }
             }
