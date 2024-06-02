@@ -1,32 +1,37 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE = 'calculator-app:${BUILD_ID}'
-    }
-
     stages {
         stage('Build') {
             steps {
                 script {
-                    // Building Docker image
-                    sh 'docker build -t $DOCKER_IMAGE .'
+                    // Your build commands
+                    sh 'npm install'
+                    sh 'docker build -t myapp:latest .'
                 }
             }
         }
         stage('Test') {
             steps {
                 script {
-                    // Here we assume that Docker can run our tests, or you might use another step
-                    sh 'docker run --rm $DOCKER_IMAGE npm test'
+                    // Run tests
+                    sh 'npm test'
+                }
+            }
+        }
+        stage('Code Quality Analysis') {
+            steps {
+                script {
+                    // Example with SonarQube
+                    sh 'sonar-scanner'
                 }
             }
         }
         stage('Deploy') {
             steps {
                 script {
-                    // Dummy deploy command
-                    sh 'echo "Deploying to staging environment..."'
+                    // Deploy to a staging environment
+                    sh 'docker-compose up -d'
                 }
             }
         }
