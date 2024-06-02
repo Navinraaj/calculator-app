@@ -26,7 +26,7 @@ pipeline {
             steps {
                 script {
                     // Ensure environment variable correctly references the SonarQube server setup in Jenkins
-                    withSonarQubeEnv('My SonarQube Server') {
+                    withSonarQubeEnv('SonarQube') {
                         // Use the SonarQube scanner with the proper token
                         bat "sonar-scanner.bat -Dsonar.projectKey=calculator-app -Dsonar.sources=. -Dsonar.host.url=http://your-sonar-url -Dsonar.login=${env['calculator-token']}"
                     }
