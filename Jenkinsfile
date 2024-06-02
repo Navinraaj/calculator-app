@@ -15,7 +15,10 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    bat 'sonar-scanner -Dsonar.projectKey=calculator-jenkins -Dsonar.sources=src -Dsonar.host.url=http://172.31.112.1:9000 -Dsonar.login=%SONAR_TOKEN%'
+                    // Use the SonarQube Scanner from Jenkins tool configuration
+                    withEnv(["PATH+SONARQUBE=${tool 'sonarscanner'}/bin"]) {
+                        bat 'sonar-scanner -Dsonar.projectKey=calculator-jenkins -Dsonar.sources=src -Dsonar.host.url=http://172.31.112.1:9000 -Dsonar.login=%SONAR_TOKEN%'
+                    }
                 }
             }
         }
