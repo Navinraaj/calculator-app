@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    tools {
+        jdk 'JDK 17'  // Specify the JDK name exactly as you named it in the global configuration
+    }
     environment {
         // Fetch the SonarQube token from Jenkins credentials
         SONAR_TOKEN = credentials('calculator-token')
