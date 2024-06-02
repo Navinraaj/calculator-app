@@ -6,11 +6,6 @@ pipeline {
         SONAR_TOKEN = credentials('calculator-token')
     }
 
-    tools {
-        // Use the SonarQube Scanner tool installed in Jenkins
-        sonarScanner 'sonarscanner'
-    }
-
     stages {
         stage('Checkout SCM') {
             steps {
