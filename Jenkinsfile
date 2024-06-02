@@ -21,11 +21,17 @@ pipeline {
                 bat 'java -version'
             }
         }
+        stage('List Workspace') {
+            steps {
+                bat 'dir'
+            }
+        }
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     withEnv(["PATH+SONARQUBE=${tool 'sonarscanner'}/bin"]) {
-                        bat 'sonar-scanner -Dsonar.projectKey=calculator-jenkins -Dsonar.sources=src -Dsonar.host.url=http://172.31.112.1:9000 -Dsonar.login=%SONAR_TOKEN%'
+                        // Initially set sonar.sources to the root, we'll adjust it based on the dir output
+                        bat 'sonar-scanner -Dsonar.projectKey=calculator-jenkins -Dsonar.sources=. -Dsonar.host.url=http://172.31.112.1:9000 -Dsonar.login=%SONAR_TOKEN%'
                     }
                 }
             }
