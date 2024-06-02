@@ -29,23 +29,9 @@ pipeline {
         }
         stage('Sonar Analysis') {
             steps {
-                script {
-                    def scannerHome = tool name: 'sonarscanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
                     withSonarQubeEnv('SonarQube') {
-                        bat """
-                            "${scannerHome}\\bin\\sonar-scanner" ^
-                            -Dsonar.projectKey=calculator-app ^
-                            -Dsonar.projectName="Calculator App" ^
-                            -Dsonar.projectVersion=1.0 ^
-                            -Dsonar.sources=src ^
-                            -Dsonar.exclusions=**/node_modules/**,src/**/*.spec.js ^
-                            -Dsonar.tests=src ^
-                            -Dsonar.test.inclusions=**/*.spec.js, **/*.test.js ^
-                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info ^
-                            -Dsonar.login=${env.SONAR_TOKEN}
-                        """
+                        sh 'mvn clean package sonar:sonar'
                     }
-                }
             }
         }
         stage('Deploy') {
