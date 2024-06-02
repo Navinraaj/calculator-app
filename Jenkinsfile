@@ -8,6 +8,7 @@ pipeline {
 
     tools {
         jdk 'jdk-17'
+        nodejs 'nodejs-14' // The name should match what you configured in Jenkins
     }
 
     stages {
@@ -16,30 +17,52 @@ pipeline {
                 checkout scm
             }
         }
-        stage('Verify Java Version') {
+        stage('Build') {
             steps {
-                bat 'java -version'
+                script {
+                    bat 'npm install'
+                    bat 'docker build -t myapp:latest .'
+                }
             }
         }
-        stage('List Workspace') {
+        stage('Test') {
             steps {
-                bat 'dir'
+                script {
+                    bat 'npm test'
+                }
             }
         }
-        stage('SonarQube Analysis') {
+        stage('Code Quality Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     withEnv(["PATH+SONARQUBE=${tool 'sonarscanner'}/bin"]) {
-                        // Initially set sonar.sources to the root, we'll adjust it based on the dir output
                         bat 'sonar-scanner -Dsonar.projectKey=calculator-jenkins -Dsonar.sources=. -Dsonar.host.url=http://172.31.112.1:9000 -Dsonar.login=%SONAR_TOKEN%'
                     }
                 }
             }
         }
-        stage('Deploy') {
+        stage('Deploy to Test Environment') {
             steps {
                 script {
-                    bat 'echo Deploying...'
+                    bat 'docker run -d -p 3000:3000 --name myapp_test myapp:latest'
+                }
+            }
+        }
+        stage('Release to Production') {
+            steps {
+                script {
+                    // Stop the test container
+                    bat 'docker stop myapp_test && docker rm myapp_test'
+                    // Run the production container
+                    bat 'docker run -d -p 80:3000 --name myapp_prod myapp:latest'
+                }
+            }
+        }
+        stage('Monitoring and Alerting') {
+            steps {
+                script {
+                    bat 'echo Monitoring with Datadog or New Relic'
+                    // Add Datadog or New Relic commands here if applicable
                 }
             }
         }
