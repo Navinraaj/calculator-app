@@ -29,7 +29,7 @@ pipeline {
                     echo "Build Duration: ${duration} seconds"
                     echo "Triggered by: ${user}"
                     
-                    withCredentials([string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY')]) {
+                    withCredentials([string(credentialsId: 'datadog', variable: 'DATADOG_API_KEY')]) {
                         def response = httpRequest (
                             url: "https://api.us5.datadoghq.com/api/v1/events",
                             httpMode: 'POST',
