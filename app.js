@@ -1,7 +1,8 @@
 const express = require('express');
 const path = require('path');
 const app = express();
-const port = 3000;
+const defaultPort = 3000;
+const port = process.env.PORT || defaultPort;
 
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
@@ -50,10 +51,8 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-if (process.env.NODE_ENV !== 'test') {
-    app.listen(port, () => {
-        console.log(`Calculator app listening at http://localhost:${port}`);
-    });
-}
+const server = app.listen(port, () => {
+    console.log(`Calculator app listening at http://localhost:${port}`);
+});
 
-module.exports = { app, add, subtract, multiply, divide };
+module.exports = { add, subtract, multiply, divide, server };

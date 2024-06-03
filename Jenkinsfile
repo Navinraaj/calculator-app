@@ -29,27 +29,26 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    bat 'set NODE_ENV=test && npm test'
+                    bat 'set NODE_ENV=test && set PORT=4000 && npm test'
                 }
             }
         }
         stage('SonarQube Analysis') {
+            environment {
+                scannerHome = tool 'SonarQubeScanner'
+            }
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    withEnv(["PATH+SONARQUBE=${tool 'sonarscanner'}/bin"]) {
-                        bat 'sonar-scanner -Dsonar.projectKey=calculator-jenkins -Dsonar.sources=. -Dsonar.host.url=http://172.31.112.1:9000 -Dsonar.login=%SONAR_TOKEN%'
-                    }
+                    bat "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=calculator-jenkins -Dsonar.sources=. -Dsonar.host.url=http://172.31.112.1:9000 -Dsonar.login=${SONAR_TOKEN}"
                 }
             }
         }
         stage('Deploy') {
             steps {
                 script {
-                    bat '''
-                        docker stop myapp-container || true
-                        docker rm myapp-container || true
-                        docker run -d --name myapp-container -p 3000:3000 myapp:latest
-                    '''
+                    bat 'docker stop myapp-container || true'
+                    bat 'docker rm myapp-container || true'
+                    bat 'docker run -d --name myapp-container -p 3000:3000 myapp:latest'
                 }
             }
         }
@@ -60,8 +59,6 @@ pipeline {
                     def currentTime = System.currentTimeMillis()
                     def duration = (currentTime - startTime) / 1000
                     def user = currentBuild.rawBuild.getCauses().find { it.userName }?.userName ?: "Automated Trigger"
-                    echo "Build Duration: ${duration} seconds"
-                    echo "Triggered by: ${user}"
 
                     withCredentials([string(credentialsId: 'datadog', variable: 'DATADOG_API_KEY')]) {
                         def response = httpRequest (
