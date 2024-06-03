@@ -2,14 +2,13 @@ pipeline {
     agent any
 
     environment {
-        // Fetch the SonarQube token from Jenkins credentials
         SONAR_TOKEN = credentials('calculator-token')
-        DATADOG_API_KEY = credentials('datadog') // Add your Datadog API key to Jenkins credentials
+        DATADOG_API_KEY = credentials('datadog')
     }
 
     tools {
         jdk 'jdk-17'
-        nodejs 'nodejs-14' // Assuming Node.js is installed in Jenkins and named 'nodejs-14'
+        nodejs 'nodejs-14'
     }
 
     stages {
@@ -18,21 +17,59 @@ pipeline {
                 checkout scm
             }
         }
+        stage('Build') {
+            steps {
+                script {
+                    bat 'npm install'
+                    bat 'docker build -t myapp:latest .'
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                script {
+                    bat 'npm test'
+                }
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    withEnv(["PATH+SONARQUBE=${tool 'sonarscanner'}/bin"]) {
+                        bat 'sonar-scanner -Dsonar.projectKey=calculator-jenkins -Dsonar.sources=. -Dsonar.host.url=http://172.31.112.1:9000 -Dsonar.login=%SONAR_TOKEN%'
+                    }
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                script {
+                    def containerName = 'myapp-container'
+                    
+                    // Check if the container is already running and stop it
+                    def containerExists = bat(script: "docker ps -a -q -f name=${containerName}", returnStdout: true).trim()
+                    if (containerExists) {
+                        bat "docker stop ${containerName}"
+                        bat "docker rm ${containerName}"
+                    }
+
+                    // Run the new container
+                    bat "docker run -d --name ${containerName} -p 3000:3000 myapp:latest"
+                }
+            }
+        }
         stage('Monitoring and Alerting') {
             steps {
                 script {
-                    // Capture the start time
                     def startTime = currentBuild.startTimeInMillis
                     def currentTime = System.currentTimeMillis()
-                    def duration = (currentTime - startTime) / 1000 // Duration in seconds
-                    def causes = currentBuild.getBuildCauses()
-                    def user = causes.find { it.userName }?.userName ?: "Automated Trigger"
+                    def duration = (currentTime - startTime) / 1000
+                    def user = currentBuild.getBuildCauses().find { it.userName }?.userName ?: "Automated Trigger"
                     echo "Build Duration: ${duration} seconds"
                     echo "Triggered by: ${user}"
-                    
+
                     withCredentials([string(credentialsId: 'datadog', variable: 'DATADOG_API_KEY')]) {
-                        // Sending event to Datadog
-                        def eventResponse = httpRequest (
+                        def response = httpRequest (
                             url: "https://api.us5.datadoghq.com/api/v1/events",
                             httpMode: 'POST',
                             customHeaders: [[name: 'Content-Type', value: 'application/json'], [name: 'DD-API-KEY', value: "${DATADOG_API_KEY}"]],
@@ -43,24 +80,7 @@ pipeline {
                                 "tags": ["jenkins","deployment","myapp"]
                             }"""
                         )
-                        echo "Datadog event response: ${eventResponse.content}"
-
-                        // Sending custom metric to Datadog
-                        def metricResponse = httpRequest (
-                            url: "https://api.us5.datadoghq.com/api/v1/series",
-                            httpMode: 'POST',
-                            customHeaders: [[name: 'Content-Type', value: 'application/json'], [name: 'DD-API-KEY', value: "${DATADOG_API_KEY}"]],
-                            requestBody: """{
-                                "series" : [{
-                                    "metric":"jenkins.build.duration",
-                                    "points":[[${currentTime / 1000}, ${duration}]],
-                                    "type":"gauge",
-                                    "tags":["jenkins","build"],
-                                    "host":"${env.NODE_NAME}"
-                                }]
-                            }"""
-                        )
-                        echo "Datadog metric response: ${metricResponse.content}"
+                        echo "Datadog event response: ${response.content}"
                     }
                 }
             }
