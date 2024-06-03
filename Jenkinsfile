@@ -2,14 +2,13 @@ pipeline {
     agent any
 
     environment {
-        // Fetch the SonarQube token and Datadog API key from Jenkins credentials
         SONAR_TOKEN = credentials('calculator-token')
-        DATADOG_API_KEY = credentials('datadog') // Add your Datadog API key to Jenkins credentials
+        DATADOG_API_KEY = credentials('datadog')
     }
 
     tools {
         jdk 'jdk-17'
-        nodejs 'nodejs-14' // Assuming Node.js is installed in Jenkins and named 'nodejs-14'
+        nodejs 'nodejs-14'
     }
 
     stages {
@@ -21,11 +20,8 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    // Remove any existing Docker image with the same name
-                    bat 'docker rmi -f myapp:latest'
-                    // Install Node.js dependencies
+                    bat 'docker rmi -f myapp:latest || true'
                     bat 'npm install'
-                    // Build the Docker image
                     bat 'docker build -t myapp:latest .'
                 }
             }
@@ -33,7 +29,6 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // Run tests with Jest
                     bat 'set NODE_ENV=test && npm test'
                 }
             }
@@ -42,7 +37,6 @@ pipeline {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     withEnv(["PATH+SONARQUBE=${tool 'sonarscanner'}/bin"]) {
-                        // Run SonarQube analysis
                         bat 'sonar-scanner -Dsonar.projectKey=calculator-jenkins -Dsonar.sources=. -Dsonar.host.url=http://172.31.112.1:9000 -Dsonar.login=%SONAR_TOKEN%'
                     }
                 }
@@ -51,30 +45,25 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Stop and remove any existing container with the same name
                     bat '''
-                        docker stop myapp-container || exit 0
-                        docker rm myapp-container || exit 0
+                        docker stop myapp-container || true
+                        docker rm myapp-container || true
+                        docker run -d --name myapp-container -p 3000:3000 myapp:latest
                     '''
-                    // Run the new Docker container
-                    bat 'docker run -d --name myapp-container -p 3000:3000 myapp:latest'
                 }
             }
         }
         stage('Monitoring and Alerting') {
             steps {
                 script {
-                    // Capture the build start time and calculate the duration
                     def startTime = currentBuild.startTimeInMillis
                     def currentTime = System.currentTimeMillis()
-                    def duration = (currentTime - startTime) / 1000 // Duration in seconds
-                    // Determine the user who triggered the build
-                    def user = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')[0]?.userId ?: "Automated Trigger"
+                    def duration = (currentTime - startTime) / 1000
+                    def user = currentBuild.rawBuild.getCauses().find { it.userName }?.userName ?: "Automated Trigger"
                     echo "Build Duration: ${duration} seconds"
                     echo "Triggered by: ${user}"
 
                     withCredentials([string(credentialsId: 'datadog', variable: 'DATADOG_API_KEY')]) {
-                        // Send deployment notification to Datadog
                         def response = httpRequest (
                             url: "https://api.us5.datadoghq.com/api/v1/events",
                             httpMode: 'POST',
@@ -94,7 +83,6 @@ pipeline {
     }
     post {
         always {
-            // Clean up workspace after build
             cleanWs()
         }
     }

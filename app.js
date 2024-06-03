@@ -56,4 +56,4 @@ if (process.env.NODE_ENV !== 'test') {
     });
 }
 
-module.exports = { add, subtract, multiply, divide };
+module.exports = { app, add, subtract, multiply, divide };
