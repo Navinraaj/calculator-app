@@ -46,9 +46,21 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    bat 'docker stop myapp-container || true'
-                    bat 'docker rm myapp-container || true'
-                    bat 'docker run -d --name myapp-container -p 3000:3000 myapp:latest'
+                    def containerName = 'myapp-container'
+                    
+                    // Check if the container is already running and stop it
+                    try {
+                        def containerExists = bat(script: "docker ps -a -q -f name=${containerName}", returnStdout: true).trim()
+                        if (containerExists) {
+                            bat "docker stop ${containerName}"
+                            bat "docker rm ${containerName}"
+                        }
+                    } catch (Exception e) {
+                        echo "No existing container to stop and remove: ${e.getMessage()}"
+                    }
+
+                    // Run the new container
+                    bat "docker run -d --name ${containerName} -p 3000:3000 myapp:latest"
                 }
             }
         }
