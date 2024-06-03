@@ -33,16 +33,7 @@ pipeline {
                 }
             }
         }
-        stage('SonarQube Analysis') {
-            environment {
-                scannerHome = tool 'SonarQubeScanner'
-            }
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    bat "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=calculator-jenkins -Dsonar.sources=. -Dsonar.host.url=http://172.31.112.1:9000 -Dsonar.login=${SONAR_TOKEN}"
-                }
-            }
-        }
+        
         stage('Deploy') {
             steps {
                 script {
