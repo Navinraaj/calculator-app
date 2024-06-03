@@ -47,10 +47,14 @@ pipeline {
                     def containerName = 'myapp-container'
                     
                     // Check if the container is already running and stop it
-                    def containerExists = bat(script: "docker ps -a -q -f name=${containerName}", returnStdout: true).trim()
-                    if (containerExists) {
-                        bat "docker stop ${containerName}"
-                        bat "docker rm ${containerName}"
+                    try {
+                        def containerExists = bat(script: "docker ps -a -q -f name=${containerName}", returnStdout: true).trim()
+                        if (containerExists) {
+                            bat "docker stop ${containerName}"
+                            bat "docker rm ${containerName}"
+                        }
+                    } catch (Exception e) {
+                        echo "No existing container to stop and remove: ${e.getMessage()}"
                     }
 
                     // Run the new container
