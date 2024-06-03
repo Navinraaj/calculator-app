@@ -31,7 +31,8 @@ pipeline {
                     echo "Triggered by: ${user}"
                     
                     withCredentials([string(credentialsId: 'datadog', variable: 'DATADOG_API_KEY')]) {
-                        def response = httpRequest (
+                        // Sending event to Datadog
+                        def eventResponse = httpRequest (
                             url: "https://api.us5.datadoghq.com/api/v1/events",
                             httpMode: 'POST',
                             customHeaders: [[name: 'Content-Type', value: 'application/json'], [name: 'DD-API-KEY', value: "${DATADOG_API_KEY}"]],
@@ -42,7 +43,24 @@ pipeline {
                                 "tags": ["jenkins","deployment","myapp"]
                             }"""
                         )
-                        echo "Datadog event response: ${response.content}"
+                        echo "Datadog event response: ${eventResponse.content}"
+
+                        // Sending custom metric to Datadog
+                        def metricResponse = httpRequest (
+                            url: "https://api.us5.datadoghq.com/api/v1/series",
+                            httpMode: 'POST',
+                            customHeaders: [[name: 'Content-Type', value: 'application/json'], [name: 'DD-API-KEY', value: "${DATADOG_API_KEY}"]],
+                            requestBody: """{
+                                "series" : [{
+                                    "metric":"jenkins.build.duration",
+                                    "points":[[${currentTime / 1000}, ${duration}]],
+                                    "type":"gauge",
+                                    "tags":["jenkins","build"],
+                                    "host":"${env.NODE_NAME}"
+                                }]
+                            }"""
+                        )
+                        echo "Datadog metric response: ${metricResponse.content}"
                     }
                 }
             }
