@@ -20,20 +20,21 @@ pipeline {
         }
         stage('Monitoring and Alerting') {
             steps {
-                script {
-                    // Send a custom event to Datadog
-                    def response = httpRequest (
-                        url: "https://api.datadoghq.com/api/v1/events",
-                        httpMode: 'POST',
-                        customHeaders: [[name: 'Content-Type', value: 'application/json'], [name: 'DD-API-KEY', value: "${env.DATADOG_API_KEY}"]],
-                        requestBody: '''{
-                            "title": "Deployment Notification",
-                            "text": "Deployment of myapp to production was successful.",
-                            "priority": "normal",
-                            "tags": ["jenkins","deployment","myapp"]
-                        }'''
-                    )
-                    echo "Datadog event response: ${response}"
+                withCredentials([string(credentialsId: 'datadog', variable: 'DATADOG_API_KEY')]) {
+                    script {
+                        def response = httpRequest (
+                            url: "https://api.datadoghq.com/api/v1/events",
+                            httpMode: 'POST',
+                            customHeaders: [[name: 'Content-Type', value: 'application/json'], [name: 'DD-API-KEY', value: "${DATADOG_API_KEY}"]],
+                            requestBody: '''{
+                                "title": "Deployment Notification",
+                                "text": "Deployment of myapp to production was successful.",
+                                "priority": "normal",
+                                "tags": ["jenkins","deployment","myapp"]
+                            }'''
+                        )
+                        echo "Datadog event response: ${response.content}"
+                    }
                 }
             }
         }
