@@ -34,7 +34,7 @@ pipeline {
             steps {
                 script {
                     // Run tests with Jest
-                    bat 'npm test'
+                    bat 'set NODE_ENV=test && npm test'
                 }
             }
         }
