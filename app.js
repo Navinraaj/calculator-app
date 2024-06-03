@@ -50,6 +50,8 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`Calculator app listening at http://localhost:${port}`);
 });
+
+module.exports = { app, server, add, subtract, multiply, divide };
