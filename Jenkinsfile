@@ -4,11 +4,12 @@ pipeline {
     environment {
         // Fetch the SonarQube token from Jenkins credentials
         SONAR_TOKEN = credentials('calculator-token')
+        DATADOG_API_KEY = credentials('datadog') // Add your Datadog API key to Jenkins credentials
     }
 
     tools {
         jdk 'jdk-17'
-        nodejs 'nodejs-14' // The name should match what you configured in Jenkins
+        nodejs 'nodejs-14' // Assuming Node.js is installed in Jenkins and named 'nodejs-14'
     }
 
     stages {
@@ -61,8 +62,19 @@ pipeline {
         stage('Monitoring and Alerting') {
             steps {
                 script {
-                    bat 'echo Monitoring with Datadog or New Relic'
-                    // Add Datadog or New Relic commands here if applicable
+                    // Send a custom event to Datadog
+                    def response = httpRequest (
+                        url: "https://api.datadoghq.com/api/v1/events",
+                        httpMode: 'POST',
+                        customHeaders: [[name: 'Content-Type', value: 'application/json'], [name: 'DD-API-KEY', value: "${env.DATADOG_API_KEY}"]],
+                        requestBody: '''{
+                            "title": "Deployment Notification",
+                            "text": "Deployment of myapp to production was successful.",
+                            "priority": "normal",
+                            "tags": ["jenkins","deployment","myapp"]
+                        }'''
+                    )
+                    echo "Datadog event response: ${response}"
                 }
             }
         }
