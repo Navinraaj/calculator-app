@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="5" failures="0" errors="0" time="0.814">
-  <testsuite name="undefined" errors="0" failures="0" skipped="0" timestamp="2024-06-03T10:19:07" time="0.723" tests="5">
-    <testcase classname=" adds 1 + 2 to equal 3" name=" adds 1 + 2 to equal 3" time="0.003">
+<testsuites name="jest tests" tests="5" failures="0" errors="0" time="1.302">
+  <testsuite name="undefined" errors="0" failures="0" skipped="0" timestamp="2024-06-03T11:06:32" time="1.163" tests="5">
+    <testcase classname=" adds 1 + 2 to equal 3" name=" adds 1 + 2 to equal 3" time="0.004">
     </testcase>
     <testcase classname=" subtracts 5 - 2 to equal 3" name=" subtracts 5 - 2 to equal 3" time="0">
     </testcase>
-    <testcase classname=" multiplies 2 * 3 to equal 6" name=" multiplies 2 * 3 to equal 6" time="0">
+    <testcase classname=" multiplies 2 * 3 to equal 6" name=" multiplies 2 * 3 to equal 6" time="0.001">
     </testcase>
-    <testcase classname=" divides 6 / 2 to equal 3" name=" divides 6 / 2 to equal 3" time="0">
+    <testcase classname=" divides 6 / 2 to equal 3" name=" divides 6 / 2 to equal 3" time="0.001">
     </testcase>
-    <testcase classname=" divides 1 / 0 to return &quot;Cannot divide by zero&quot;" name=" divides 1 / 0 to return &quot;Cannot divide by zero&quot;" time="0">
+    <testcase classname=" divides 1 / 0 to return &quot;Cannot divide by zero&quot;" name=" divides 1 / 0 to return &quot;Cannot divide by zero&quot;" time="0.001">
     </testcase>
   </testsuite>
 </testsuites>
