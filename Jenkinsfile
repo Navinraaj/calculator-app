@@ -25,7 +25,8 @@ pipeline {
                     def startTime = currentBuild.startTimeInMillis
                     def currentTime = System.currentTimeMillis()
                     def duration = (currentTime - startTime) / 1000 // Duration in seconds
-                    def user = currentBuild.rawBuild.getCauses().find { it.userName }?.userName ?: "Automated Trigger"
+                    def causes = currentBuild.getBuildCauses()
+                    def user = causes.find { it.userName }?.userName ?: "Automated Trigger"
                     echo "Build Duration: ${duration} seconds"
                     echo "Triggered by: ${user}"
                     
