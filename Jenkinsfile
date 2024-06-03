@@ -9,6 +9,7 @@ pipeline {
     tools {
         jdk 'jdk-17'
         nodejs 'nodejs-14'
+        sonarQube 'SonarQubeScanner'
     }
 
     stages {
@@ -29,7 +30,7 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    bat 'set NODE_ENV=test && set PORT=4000 && npm test'
+                    bat 'set NODE_ENV=test && set PORT=4000 && npm test -- --coverage'
                 }
             }
         }
@@ -39,7 +40,7 @@ pipeline {
             }
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    bat "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=calculator-jenkins -Dsonar.sources=. -Dsonar.host.url=http://172.31.112.1:9000 -Dsonar.login=${SONAR_TOKEN}"
+                    bat "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=calculator-jenkins -Dsonar.sources=. -Dsonar.host.url=http://172.31.112.1:9000 -Dsonar.login=${SONAR_TOKEN} -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info"
                 }
             }
         }
@@ -58,7 +59,6 @@ pipeline {
                     def startTime = currentBuild.startTimeInMillis
                     def currentTime = System.currentTimeMillis()
                     def duration = (currentTime - startTime) / 1000
-                    def user = currentBuild.rawBuild.getCauses().find { it.userName }?.userName ?: "Automated Trigger"
 
                     withCredentials([string(credentialsId: 'datadog', variable: 'DATADOG_API_KEY')]) {
                         def response = httpRequest (
@@ -67,7 +67,7 @@ pipeline {
                             customHeaders: [[name: 'Content-Type', value: 'application/json'], [name: 'DD-API-KEY', value: "${DATADOG_API_KEY}"]],
                             requestBody: """{
                                 "title": "Deployment Notification",
-                                "text": "Deployment of myapp to production was successful.\\nBuild Duration: ${duration} seconds\\nTriggered by: ${user}",
+                                "text": "Deployment of myapp to production was successful.\\nBuild Duration: ${duration} seconds",
                                 "priority": "normal",
                                 "tags": ["jenkins","deployment","myapp"]
                             }"""
