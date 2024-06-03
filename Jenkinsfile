@@ -22,7 +22,7 @@ pipeline {
             steps {
                 script {
                     // Remove any existing Docker image with the same name
-                    bat 'docker rmi -f myapp:latest || true'
+                    bat 'docker rmi -f myapp:latest'
                     // Install Node.js dependencies
                     bat 'npm install'
                     // Build the Docker image
@@ -52,8 +52,10 @@ pipeline {
             steps {
                 script {
                     // Stop and remove any existing container with the same name
-                    bat 'docker stop myapp-container || true'
-                    bat 'docker rm myapp-container || true'
+                    bat '''
+                        docker stop myapp-container || exit 0
+                        docker rm myapp-container || exit 0
+                    '''
                     // Run the new Docker container
                     bat 'docker run -d --name myapp-container -p 3000:3000 myapp:latest'
                 }
